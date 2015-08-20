@@ -3,5 +3,10 @@
 /.idea/workspace.xml
 /.idea/libraries
 .DS_Store
-/build
-app/build
+/build/*
+app/build/*
+sdkui/build/*
+sdkui/*.iml
+*.iml
+bin/
+gen/
