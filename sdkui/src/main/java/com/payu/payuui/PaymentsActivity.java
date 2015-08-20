@@ -1,34 +1,26 @@
 package com.payu.payuui;
 
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.os.Build;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
-import com.payu.custombrowser.Bank;
-import com.payu.custombrowser.PayUWebChromeClient;
-import com.payu.custombrowser.PayUWebViewClient;
-import com.payu.india.Extras.PayUSdkDetails;
+import org.apache.http.util.EncodingUtils;
+
 import com.payu.india.Model.PayuConfig;
 import com.payu.india.Payu.PayuConstants;
 
-import org.apache.http.util.EncodingUtils;
-
-public class PaymentsActivity extends AppCompatActivity{
+public class PaymentsActivity extends Activity {
 
     Bundle bundle;
     WebView mWebView;
@@ -80,76 +72,6 @@ public class PaymentsActivity extends AppCompatActivity{
         mWebView = (WebView) findViewById(R.id.webview);
         mWebView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
 
-        try {
-            Class.forName("com.payu.custombrowser.Bank");
-            final Bank bank = new Bank() {
-                @Override
-                public void registerBroadcast(BroadcastReceiver broadcastReceiver, IntentFilter filter) {
-                    mReceiver = broadcastReceiver;
-                    registerReceiver(broadcastReceiver, filter);
-                }
-
-                @Override
-                public void unregisterBroadcast(BroadcastReceiver broadcastReceiver) {
-                    if(mReceiver != null){
-                        unregisterReceiver(mReceiver);
-                        mReceiver = null;
-                    }
-                }
-
-                @Override
-                public void onHelpUnavailable() {
-                    findViewById(R.id.parent).setVisibility(View.GONE);
-                    findViewById(R.id.trans_overlay).setVisibility(View.GONE);
-                }
-
-                @Override
-                public void onBankError() {
-                    findViewById(R.id.parent).setVisibility(View.GONE);
-                    findViewById(R.id.trans_overlay).setVisibility(View.GONE);
-                }
-
-                @Override
-                public void onHelpAvailable() {
-                    findViewById(R.id.parent).setVisibility(View.VISIBLE);
-                }
-            };
-            Bundle args = new Bundle();
-            args.putInt("webView", R.id.webview);
-            args.putInt("tranLayout",R.id.trans_overlay);
-            args.putInt("mainLayout",R.id.r_layout);
-
-            String [] list =  payuConfig.getData().split("&");
-            String txnId = null;
-            String merchantKey = null;
-            for (String item : list) {
-                if(item.contains("txnid")){
-                    txnId = item.split("=")[1];
-                }else if (item.contains("key")){
-                    merchantKey = item.split("=")[1];
-                }
-                if (null != txnId && null != merchantKey) break;
-            }
-            args.putString(Bank.TXN_ID, txnId == null ? String.valueOf(System.currentTimeMillis()) : txnId);
-            args.putString("merchant_key", null != merchantKey ? merchantKey : "could not find");
-            PayUSdkDetails payUSdkDetails = new PayUSdkDetails();
-            args.putString("sdk_details", "VersionCode: " + payUSdkDetails.getSdkVersionCode() + ", VersionName: " + payUSdkDetails.getSdkVersionName());
-            if(getIntent().getExtras().containsKey("showCustom")) {
-                args.putBoolean("showCustom", getIntent().getBooleanExtra("showCustom", false));
-            }
-            args.putBoolean("showCustom", true);
-            bank.setArguments(args);
-            findViewById(R.id.parent).bringToFront();
-            try {
-                getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.fade_in, R.anim.cb_face_out).add(R.id.parent, bank).commit();
-            }catch(Exception e)
-            {
-                e.printStackTrace();
-                finish();
-            }
-            mWebView.setWebChromeClient(new PayUWebChromeClient(bank));
-            mWebView.setWebViewClient(new PayUWebViewClient(bank));
-        } catch (ClassNotFoundException e) {
             mWebView.getSettings().setSupportMultipleWindows(true);
             mWebView.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
             mWebView.addJavascriptInterface(new Object() {
@@ -195,7 +117,6 @@ public class PaymentsActivity extends AppCompatActivity{
 
             });
             mWebView.setWebViewClient(new WebViewClient());
-        }
 
         mWebView.getSettings().setJavaScriptEnabled(true);
         mWebView.getSettings().setDomStorageEnabled(true);
